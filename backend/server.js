@@ -13,14 +13,14 @@ dotenv.config();
 
 // Crear aplicación Express
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
 // Conectar a MongoDB
 connectDB();
 
 // Middlewares
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5000'],
+  origin: ['http://localhost:5173', 'http://localhost:3000'],
   credentials: true
 }));
 
