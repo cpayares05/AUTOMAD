@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { FileText, Menu, X, Home, Search } from 'lucide-react';
+import Login from './components/Login';
+import Header from './components/Header';
 import Inicio from './pages/Inicio';
 import Registro from './pages/Registro';
 import Signos from './pages/Signos';
@@ -9,6 +11,61 @@ import BuscarPacientes from './pages/BuscarPacientes';
 
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Check for existing authentication on app load
+  useState(() => {
+    const token = localStorage.getItem('token');
+    const savedUser = localStorage.getItem('user');
+    
+    if (token && savedUser) {
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        setUser(parsedUser);
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error('Error parsing saved user:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
+    }
+    
+    setIsLoading(false);
+  });
+
+  const handleLoginSuccess = (userData: any, token: string) => {
+    setUser(userData);
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('patientData');
+    localStorage.removeItem('lastEvaluation');
+    setUser(null);
+    setIsAuthenticated(false);
+    setIsMenuOpen(false);
+  };
+
+  // Show loading screen while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-green-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-teal-600 border-t-transparent mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando Sistema SAVISER...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login if not authenticated
+  if (!isAuthenticated) {
+    return <Login onLoginSuccess={handleLoginSuccess} />;
+  }
 
   return (
     <BrowserRouter>
@@ -77,8 +134,14 @@ function App() {
 
             <div className="absolute bottom-6 left-6 right-6">
               <div className="bg-white/10 rounded-lg p-4">
-                <p className="text-sm font-semibold mb-1">Sistema SAVISER</p>
-                <p className="text-xs opacity-80">Versión 1.0</p>
+                <p className="text-sm font-semibold mb-1">{user.nombre}</p>
+                <p className="text-xs opacity-80">{user.rol}</p>
+                <button
+                  onClick={handleLogout}
+                  className="mt-2 text-xs text-white/80 hover:text-white underline"
+                >
+                  Cerrar Sesión
+                </button>
               </div>
             </div>
           </div>
@@ -91,6 +154,9 @@ function App() {
         >
           <Menu className="w-6 h-6 text-white" />
         </button>
+
+        {/* Header */}
+        <Header user={user} onLogout={handleLogout} />
 
         <div className="flex-1 p-6">
           <div className="max-w-5xl mx-auto">

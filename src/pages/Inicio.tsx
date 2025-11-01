@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Activity, FileText, TrendingUp, Clock, AlertTriangle } from 'lucide-react';
+import { Users, Activity, FileText, TrendingUp, Clock, AlertTriangle, User } from 'lucide-react';
 import { patientService, triageService } from '../services/api';
 
 interface Stats {
@@ -24,6 +24,7 @@ interface RecentEvaluation {
 
 function Inicio() {
   const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
   const [stats, setStats] = useState<Stats>({
     totalPacientes: 0,
     evaluacionesHoy: 0,
@@ -35,6 +36,12 @@ function Inicio() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Get user info from localStorage
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+    
     fetchDashboardData();
   }, []);
 
@@ -122,6 +129,16 @@ function Inicio() {
     return `${Math.floor(diffInMinutes / 1440)} d`;
   };
 
+  const getRoleDisplayName = (role: string) => {
+    switch (role) {
+      case 'ADMIN': return 'Administrador';
+      case 'MEDICO': return 'Médico';
+      case 'ENFERMERO': return 'Enfermero';
+      case 'RECEPCIONISTA': return 'Recepcionista';
+      default: return role;
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -141,15 +158,28 @@ function Inicio() {
     <div className="space-y-6">
       {/* Header */}
       <div className="border-l-4 border-teal-600 pl-4">
-        <h1 className="text-2xl font-bold text-gray-800 uppercase">Panel de Control SAVISER</h1>
-        <p className="text-sm text-gray-600 mt-1">
-          Sistema de Clasificación de Triage - {new Date().toLocaleDateString('es-CO', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          })}
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800 uppercase">Panel de Control SAVISER</h1>
+            <p className="text-sm text-gray-600 mt-1">
+              Sistema de Clasificación de Triage - {new Date().toLocaleDateString('es-CO', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </p>
+          </div>
+          {user && (
+            <div className="text-right">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <User className="w-4 h-4" />
+                <span>Bienvenido, <strong>{user.nombre}</strong></span>
+              </div>
+              <p className="text-xs text-gray-500">{getRoleDisplayName(user.rol)}</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Error Message */}
